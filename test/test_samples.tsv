@@ -1,2 +1,2 @@
-sample	run	fastq1	fastq2
-GM12878_test	run1	test/data/GM12878_R1.fastq.gz	test/data/GM12878_R2.fastq.gz
+condition	sample	run	fastq1	fastq2
+GM12878_test	GM12878_test_rep1	run1	test/data/GM12878_R1.fastq.gz	test/data/GM12878_R2.fastq.gz

@@ -21,18 +21,40 @@ missing_cols = required_cols - set(samples_df.columns)
 if missing_cols:
     sys.exit(f"Error: Sample sheet '{samples_file}' is missing required columns: {missing_cols}")
 
-# Extract sample and run identifiers
+# Support condition/group column for biological replicates (defaults to sample if absent)
+if "condition" not in samples_df.columns and "group" in samples_df.columns:
+    samples_df["condition"] = samples_df["group"]
+elif "condition" not in samples_df.columns:
+    samples_df["condition"] = samples_df["sample"]
+
+# Extract unique condition, sample, and run identifiers
+CONDITIONS = sorted(list(samples_df["condition"].unique()))
 SAMPLES = sorted(list(samples_df["sample"].unique()))
 RUNS = sorted(list(samples_df["run"].unique()))
+
+# Map condition -> [sample1, sample2, ...] and identify multi-replicate conditions
+CONDITION_SAMPLES = {}
+for _, row in samples_df.iterrows():
+    c = row["condition"]
+    s = row["sample"]
+    if c not in CONDITION_SAMPLES:
+        CONDITION_SAMPLES[c] = []
+    if s not in CONDITION_SAMPLES[c]:
+        CONDITION_SAMPLES[c].append(s)
+
+MULTI_REP_CONDITIONS = sorted([c for c, s_list in CONDITION_SAMPLES.items() if len(s_list) > 1])
 
 # Create lookup dictionary mapping (sample, run) -> (fastq1, fastq2)
 SAMPLE_RUNS = {}
 SAMPLE_RUN_MAP = {}
+SAMPLE_CONDITION = {}
 for _, row in samples_df.iterrows():
+    c = row["condition"]
     s = row["sample"]
     r = row["run"]
     f1 = row["fastq1"]
     f2 = row["fastq2"]
+    SAMPLE_CONDITION[s] = c
     if s not in SAMPLE_RUNS:
         SAMPLE_RUNS[s] = []
     SAMPLE_RUNS[s].append(r)

@@ -146,3 +146,29 @@ rule addfrag_or_pass:
             -o {params.outprefix} \
             {params.re_arg} > {log} 2>&1
         """
+
+# -----------------------------------------------------------------------------
+# 6. Biological Replicate Merging (Official 4DN merge-pairs.cwl)
+# -----------------------------------------------------------------------------
+rule merge_bio_reps:
+    input:
+        pairs = lambda wildcards: [f"{OUTDIR}/pairs/{s}.ff.pairs.gz" for s in CONDITION_SAMPLES[wildcards.condition]],
+        px2 = lambda wildcards: [f"{OUTDIR}/pairs/{s}.ff.pairs.gz.px2" for s in CONDITION_SAMPLES[wildcards.condition]]
+    output:
+        merged_ff_pairs = f"{OUTDIR}/pairs_merged/{{condition}}.merged.ff.pairs.gz",
+        merged_ff_px2 = f"{OUTDIR}/pairs_merged/{{condition}}.merged.ff.pairs.gz.px2"
+    log:
+        f"{OUTDIR}/logs/pairtools/merge_bioreps_{{condition}}.log"
+    params:
+        outprefix = lambda wildcards, output: output.merged_ff_pairs.replace('.pairs.gz', '')
+    threads:
+        8
+    container:
+        CONTAINER_4DN
+    shell:
+        """
+        mkdir -p $(dirname {output.merged_ff_pairs}) $(dirname {log})
+        /usr/local/bin/run-merge-pairs.sh \
+            {params.outprefix} \
+            {input.pairs} > {log} 2>&1
+        """

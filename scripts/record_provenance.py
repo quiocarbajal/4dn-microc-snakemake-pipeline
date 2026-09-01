@@ -32,6 +32,9 @@ meta = {
         "chrom_sizes": snakemake.params.chrom_sizes
     },
     "matrix": snakemake.params.matrix,
+    "conditions": snakemake.params.conditions,
+    "condition_samples": snakemake.params.condition_samples,
+    "multi_rep_conditions": snakemake.params.multi_rep_conditions,
     "samples": snakemake.params.samples,
     "sample_runs": snakemake.params.sample_runs
 }

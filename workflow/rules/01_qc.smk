@@ -88,3 +88,31 @@ rule pairsqc:
             {params.outdir} \
             {params.max_dist} > {log} 2>&1
         """
+
+# -----------------------------------------------------------------------------
+# 3. Merged Biological Replicate pairsqc QC (Official 4DN pairsqc-merge.cwl)
+# -----------------------------------------------------------------------------
+rule pairsqc_merge:
+    input:
+        reports = lambda wildcards: [f"{OUTDIR}/qc/pairsqc/{s}_report.zip" for s in CONDITION_SAMPLES[wildcards.condition]]
+    output:
+        report_zip = f"{OUTDIR}/qc/pairsqc_merged/{{condition}}_merged_report.zip"
+    log:
+        f"{OUTDIR}/logs/pairsqc/merge_{{condition}}.log"
+    params:
+        outdir = lambda wildcards, output: os.path.dirname(output.report_zip),
+        outprefix = lambda wildcards, output: f"{wildcards.condition}_merged",
+        enzyme = config.get("qc", {}).get("pairsqc_enzyme", "4")
+    threads:
+        2
+    container:
+        CONTAINER_4DN
+    shell:
+        """
+        mkdir -p {params.outdir} $(dirname {log})
+        /usr/local/bin/run-pairsqc-merge.sh \
+            {params.outdir} \
+            {params.outprefix} \
+            {params.enzyme} \
+            {input.reports} > {log} 2>&1
+        """

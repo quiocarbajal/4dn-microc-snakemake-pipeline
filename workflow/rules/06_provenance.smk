@@ -31,7 +31,10 @@ rule record_provenance:
             "add_juicer_norms_to_mcool": config.get("matrix", {}).get("add_juicer_norms_to_mcool", True)
         },
         samples = SAMPLES,
-        sample_runs = SAMPLE_RUNS
+        sample_runs = SAMPLE_RUNS,
+        conditions = CONDITIONS,
+        condition_samples = CONDITION_SAMPLES,
+        multi_rep_conditions = MULTI_REP_CONDITIONS
     container:
         CONTAINER_4DN
     script:

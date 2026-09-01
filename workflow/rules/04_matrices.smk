@@ -154,3 +154,95 @@ rule juicebox_pre:
             -m {params.maxmem} \
             {params.no_balance_flag} > {log} 2>&1
         """
+
+# -----------------------------------------------------------------------------
+# 4. Merged Biological Replicate Matrices (Official 4DN hi-c-processing-pairs.cwl)
+# -----------------------------------------------------------------------------
+rule cooler_cload_merged:
+    input:
+        pairs = f"{OUTDIR}/pairs_merged/{{condition}}.merged.ff.pairs.gz",
+        px2 = f"{OUTDIR}/pairs_merged/{{condition}}.merged.ff.pairs.gz.px2",
+        chrom_sizes = get_chrom_sizes()
+    output:
+        cool = f"{OUTDIR}/cool_merged/{{condition}}.cool"
+    log:
+        f"{OUTDIR}/logs/cooler/cload_merged_{{condition}}.log"
+    params:
+        outprefix = lambda wildcards, output: output.cool.replace('.cool', ''),
+        bin_size = BASE_RES,
+        max_split = 2
+    threads:
+        8
+    container:
+        CONTAINER_4DN
+    shell:
+        """
+        mkdir -p $(dirname {output.cool}) $(dirname {log})
+        /usr/local/bin/run-cooler.sh \
+            {input.pairs} \
+            {input.chrom_sizes} \
+            {params.bin_size} \
+            {threads} \
+            {params.outprefix} \
+            {params.max_split} > {log} 2>&1
+        """
+
+rule cooler_zoomify_merged:
+    input:
+        cool = f"{OUTDIR}/cool_merged/{{condition}}.cool"
+    output:
+        mcool = f"{OUTDIR}/mcool_merged/{{condition}}.mcool"
+    log:
+        f"{OUTDIR}/logs/cooler/zoomify_merged_{{condition}}.log"
+    params:
+        outprefix = lambda wildcards, output: f"{os.path.dirname(output.mcool)}/{wildcards.condition}",
+        resolutions = RESOLUTIONS_STR,
+        chunksize = 10000000,
+        no_balance_flag = "" if config.get("matrix", {}).get("balance", True) else "-B"
+    threads:
+        8
+    container:
+        CONTAINER_4DN
+    shell:
+        """
+        mkdir -p $(dirname {output.mcool}) $(dirname {log})
+        /usr/local/bin/run-cool2multirescool.sh \
+            -i {input.cool} \
+            -o {params.outprefix} \
+            -p {threads} \
+            -c {params.chunksize} \
+            -u {params.resolutions} \
+            {params.no_balance_flag} > {log} 2>&1
+        mv {params.outprefix}.multires.cool {output.mcool}
+        """
+
+rule juicebox_pre_merged:
+    input:
+        pairs = f"{OUTDIR}/pairs_merged/{{condition}}.merged.ff.pairs.gz",
+        chrom_sizes = get_chrom_sizes()
+    output:
+        hic = f"{OUTDIR}/hic_merged/{{condition}}.hic"
+    log:
+        f"{OUTDIR}/logs/juicebox/pre_merged_{{condition}}.log"
+    params:
+        outprefix = lambda wildcards, output: output.hic.replace('.hic', ''),
+        min_res = BASE_RES,
+        resolutions = RESOLUTIONS_STR,
+        maxmem = lambda wildcards, resources: f"{max(1, int(resources.mem_mb // 1024))}g",
+        no_balance_flag = "" if config.get("matrix", {}).get("balance", True) else "-B"
+    threads:
+        8
+    container:
+        CONTAINER_4DN
+    shell:
+        """
+        mkdir -p $(dirname {output.hic}) $(dirname {log})
+        /usr/local/bin/run-juicebox-pre.sh \
+            -i {input.pairs} \
+            -c {input.chrom_sizes} \
+            -o {params.outprefix} \
+            -r {params.min_res} \
+            -u {params.resolutions} \
+            -m {params.maxmem} \
+            {params.no_balance_flag} > {log} 2>&1
+        """

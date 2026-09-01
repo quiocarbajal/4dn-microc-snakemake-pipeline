@@ -27,19 +27,27 @@ rule four_dn:
         # Optional BAM retention
         bam = [f"{OUTDIR}/bam/{s}_{r}.bam" for s, r in SAMPLE_RUN_MAP.keys()] if SAVE_BAM else [],
         
-        # Valid contact pairs and indexes (.pairs.gz & .px2)
+        # Individual biological replicate valid pairs & indexes (.pairs.gz & .px2)
         pairs = expand(f"{OUTDIR}/pairs/{{sample}}.ff.pairs.gz", sample=SAMPLES),
         px2 = expand(f"{OUTDIR}/pairs/{{sample}}.ff.pairs.gz.px2", sample=SAMPLES),
         
-        # Multiresolution contact matrices (.mcool and optional .hic)
+        # Individual biological replicate contact matrices (.mcool and optional .hic)
         mcool = expand(f"{OUTDIR}/mcool/{{sample}}.mcool", sample=SAMPLES),
         hic = expand(f"{OUTDIR}/hic/{{sample}}.hic", sample=SAMPLES) if config.get("matrix", {}).get("generate_hic", False) else [],
         
-        # 4DN pairsqc report
+        # Individual biological replicate 4DN pairsqc reports
         pairsqc = expand(f"{OUTDIR}/qc/pairsqc/{{sample}}_report.zip", sample=SAMPLES),
+        
+        # Merged biological replicate deliverables (for conditions with >1 biological replicate)
+        merged_pairs = expand(f"{OUTDIR}/pairs_merged/{{condition}}.merged.ff.pairs.gz", condition=MULTI_REP_CONDITIONS),
+        merged_px2 = expand(f"{OUTDIR}/pairs_merged/{{condition}}.merged.ff.pairs.gz.px2", condition=MULTI_REP_CONDITIONS),
+        merged_mcool = expand(f"{OUTDIR}/mcool_merged/{{condition}}.mcool", condition=MULTI_REP_CONDITIONS),
+        merged_hic = expand(f"{OUTDIR}/hic_merged/{{condition}}.hic", condition=MULTI_REP_CONDITIONS) if config.get("matrix", {}).get("generate_hic", False) else [],
+        merged_pairsqc = expand(f"{OUTDIR}/qc/pairsqc_merged/{{condition}}_merged_report.zip", condition=MULTI_REP_CONDITIONS),
         
         # Provenance metadata
         provenance = f"{OUTDIR}/provenance.json"
+
 # -----------------------------------------------------------------------------
 # Target: Optional Downstream Analysis Layer (cooltools)
 # -----------------------------------------------------------------------------
