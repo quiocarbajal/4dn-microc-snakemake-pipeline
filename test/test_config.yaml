@@ -1,0 +1,50 @@
+# =============================================================================
+# Test Configuration for 4DN v43 Smoke Testing
+# =============================================================================
+
+samples: "test/test_samples.tsv"
+outdir: "test/results"
+
+experiment_type: "micro_c"
+restriction_file: ""
+save_bam: false
+
+reference:
+  assembly: "hg19"
+  fasta: "test/reference/chr21_subset.fasta"
+  bwa_index_tgz: "test/reference/bwa_index.tar.gz"
+  chrom_sizes: "test/reference/hg19.chrom.sizes"
+
+matrix:
+  base_resolution: 1000
+  resolutions:
+    - 1000
+    - 5000
+    - 10000
+    - 25000
+    - 50000
+  balance: true
+  generate_hic: true
+  add_juicer_norms_to_mcool: true
+
+qc:
+  run_fastqc: true
+  run_pairsqc: true
+  pairsqc_enzyme: "4"
+  pairsqc_max_distance: 8.4
+
+downstream:
+  run_expected: true
+  expected_resolution: 1000
+  run_insulation: true
+  insulation_resolution: 10000
+  insulation_window_bp:
+    - 10000
+    - 25000
+  run_compartments: true
+  compartment_resolution: 25000
+
+containers:
+  4dn_hic: "docker://duplexa/4dn-hic:v43"
+  cooltools: "docker://open2c/cooltools:v0.6.1"
+  multiqc: "docker://multiqc/multiqc:v1.27"

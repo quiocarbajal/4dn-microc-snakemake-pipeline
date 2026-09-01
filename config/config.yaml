@@ -1,0 +1,118 @@
+# =============================================================================
+# 4DN v43 Micro-C / Hi-C Snakemake Pipeline Configuration
+# =============================================================================
+
+# Path to the sample sheet (TSV format: sample, run, fastq1, fastq2)
+samples: "config/samples.tsv"
+
+# Output directory for pipeline results
+outdir: "results"
+
+# -----------------------------------------------------------------------------
+# 1. Experiment & Protocol Configuration
+# -----------------------------------------------------------------------------
+# Supported types: "micro_c", "dnase_hic", "in_situ_hic", "dilution_hic", "capture_hic"
+# For "micro_c" and "dnase_hic", no restriction enzyme site file is used.
+experiment_type: "micro_c"
+
+# Restriction site file (Juicer format). Required only for enzyme-based Hi-C.
+# For Micro-C, leave as empty string / null.
+restriction_file: ""
+
+# BAM storage policy:
+# - false: Discards large intermediate BAM files after contact pair extraction (saves hundreds of GBs of disk space)
+# - true: Retains full lossless coordinate-sorted BAM files with SAM tags
+save_bam: true
+
+# -----------------------------------------------------------------------------
+# 2. Reference Genome & Index Configuration
+# -----------------------------------------------------------------------------
+reference:
+  # Genome assembly identifier (e.g. mm39, GRCm39, hg38, or custom)
+  assembly: "mm39"
+
+  # Path to reference FASTA file
+  fasta: ""
+
+  # Path to BWA index (directory, prefix, or .tar.gz archive)
+  bwa_index: "/archive/cbds/idx/ensembl/Mus_musculus/GRCm39/sequence_only/bwa/0.7.18"
+
+  # Path to two-column chromosome sizes file (<chrom_name>\t<length>)
+  # If left empty and fasta is provided, the pipeline can auto-generate it.
+  chrom_sizes: ""
+
+# -----------------------------------------------------------------------------
+# 3. Matrix Resolutions & Normalization (4DN Standards)
+# -----------------------------------------------------------------------------
+matrix:
+  # Base resolution for initial .cool file (default 1000 bp = 1 kb for Micro-C / high-res)
+  base_resolution: 1000
+
+  # Multiresolution tiers for .mcool and .hic files (4DN official standard: 1kb to 10Mb)
+  resolutions:
+    - 1000
+    - 2000
+    - 5000
+    - 10000
+    - 25000
+    - 50000
+    - 100000
+    - 250000
+    - 500000
+    - 1000000
+    - 2500000
+    - 5000000
+    - 10000000
+
+  # Perform ICE matrix balancing on .mcool files (true for Micro-C, Hi-C; false for ChIA-PET)
+  balance: true
+
+  # Generate Juicebox-compatible .hic matrix with VC, VC_SQRT, KR normalization
+  generate_hic: false
+
+  # Extract Juicer normalization vectors from .hic and inject them into .mcool
+  add_juicer_norms_to_mcool: false
+
+# -----------------------------------------------------------------------------
+# 4. Official 4DN QC & Tool Parameters
+# -----------------------------------------------------------------------------
+qc:
+  run_fastqc: true
+  run_pairsqc: true
+  # Enzyme argument for pairsqc (4 for 4-cutter, 6 for 6-cutter, "4" for Micro-C standard)
+  pairsqc_enzyme: "4"
+  pairsqc_max_distance: 8.4
+
+# -----------------------------------------------------------------------------
+# 5. Downstream High-Resolution Analysis (Optional Layer: cooltools)
+# -----------------------------------------------------------------------------
+downstream:
+  # Contact probability decay curve P(s) vs distance
+  run_expected: true
+  expected_resolution: 1000
+
+  # Multi-scale insulation score and TAD/domain boundary calling
+  run_insulation: true
+  insulation_resolution: 10000
+  insulation_window_bp:
+    - 10000
+    - 25000
+    - 50000
+    - 100000
+
+  # A/B compartment analysis (eigenvector decomposition)
+  run_compartments: true
+  compartment_resolution: 50000
+
+# -----------------------------------------------------------------------------
+# 6. Containers (Apptainer / Singularity)
+# -----------------------------------------------------------------------------
+containers:
+  # Official 4DN release v43 image containing bwa, pairtools, cooler, juicer_tools, pairix, pairsqc
+  4dn_hic: "docker://duplexa/4dn-hic:v43"
+  
+  # Downstream cooltools container for P(s), insulation, and compartment calling
+  cooltools: "docker://open2c/cooltools:v0.6.1"
+  
+  # MultiQC container for report aggregation
+  multiqc: "docker://multiqc/multiqc:v1.27"

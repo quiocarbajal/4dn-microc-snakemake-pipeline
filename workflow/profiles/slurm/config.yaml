@@ -1,0 +1,88 @@
+# =============================================================================
+# Snakemake 9 Profile for Slurm HPC with Apptainer
+# =============================================================================
+
+# Executor backend for Slurm cluster
+executor: slurm
+
+# Maximum concurrent Slurm jobs to submit
+jobs: 100
+
+# Enable native Apptainer execution
+use-apptainer: true
+
+# Apptainer execution arguments (bind host scratch and temporary directories)
+apptainer-args: "--bind /scratch,/tmp"
+
+# General execution settings
+printshellcmds: true
+keep-going: true
+rerun-incomplete: true
+latency-wait: 60
+
+# Slurm executor plugin specific settings
+slurm-logdir: "logs/slurm"
+slurm-keep-successful-logs: true
+
+# Default cluster resources (overridden per rule if defined)
+default-resources:
+  slurm_partition: ""
+  slurm_account: ""
+  runtime: 120 # walltime in minutes
+  mem_mb: 4096
+  threads: 2
+
+# Per-rule resource specifications
+set-resources:
+  bwa_mem:
+    threads: 16
+    mem_mb: 32768
+    runtime: 720
+  pairsam_parse_sort:
+    threads: 16
+    mem_mb: 65536
+    runtime: 720
+  pairsam_merge_seq_reps:
+    threads: 8
+    mem_mb: 16384
+    runtime: 480
+  pairsam_markasdup:
+    threads: 4
+    mem_mb: 32768
+    runtime: 480
+  pairsam_filter:
+    threads: 4
+    mem_mb: 32768
+    runtime: 480
+  cooler_cload:
+    threads: 8
+    mem_mb: 32768
+    runtime: 480
+  cooler_zoomify:
+    threads: 8
+    mem_mb: 49152
+    runtime: 480
+  juicebox_pre:
+    threads: 8
+    mem_mb: 65536
+    runtime: 720
+  add_hic_norm_to_mcool:
+    threads: 4
+    mem_mb: 16384
+    runtime: 240
+  pairsqc:
+    threads: 4
+    mem_mb: 16384
+    runtime: 240
+  cooltools_expected:
+    threads: 4
+    mem_mb: 16384
+    runtime: 240
+  cooltools_insulation:
+    threads: 4
+    mem_mb: 16384
+    runtime: 240
+  cooltools_compartments:
+    threads: 4
+    mem_mb: 16384
+    runtime: 240

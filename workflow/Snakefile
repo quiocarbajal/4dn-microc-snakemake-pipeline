@@ -1,0 +1,57 @@
+# =============================================================================
+# Snakemake 9 Workflow: Official 4DN v43 Hi-C / Micro-C Processing Pipeline
+# =============================================================================
+# Official Documentation: https://data.4dnucleome.org/resources/data-analysis/hi_c-processing-pipeline
+# Official GitHub: https://github.com/4dn-dcic/docker-4dn-hic (Release v43)
+# =============================================================================
+
+# Include modular rule specifications
+include: "rules/00_common.smk"
+include: "rules/01_qc.smk"
+include: "rules/02_alignment.smk"
+include: "rules/03_pairtools.smk"
+include: "rules/04_matrices.smk"
+include: "rules/05_downstream.smk"
+include: "rules/06_provenance.smk"
+
+# -----------------------------------------------------------------------------
+# Target: 4DN Official Processing & QC Layer (Primary Deliverables)
+# -----------------------------------------------------------------------------
+rule four_dn:
+    input:
+        # FastQC read quality control (for each sample and run)
+        fastqc_r1 = [f"{OUTDIR}/qc/fastqc/{s}_{r}_R1_fastqc.zip" for s, r in SAMPLE_RUN_MAP.keys()],
+        fastqc_r2 = [f"{OUTDIR}/qc/fastqc/{s}_{r}_R2_fastqc.zip" for s, r in SAMPLE_RUN_MAP.keys()],
+        
+        # Optional BAM retention
+        bam = [f"{OUTDIR}/bam/{s}_{r}.bam" for s, r in SAMPLE_RUN_MAP.keys()] if SAVE_BAM else [],
+        
+        # Valid contact pairs and indexes (.pairs.gz & .px2)
+        pairs = expand(f"{OUTDIR}/pairs/{{sample}}.ff.pairs.gz", sample=SAMPLES),
+        px2 = expand(f"{OUTDIR}/pairs/{{sample}}.ff.pairs.gz.px2", sample=SAMPLES),
+        
+        # Multiresolution contact matrices (.mcool and optional .hic)
+        mcool = expand(f"{OUTDIR}/mcool/{{sample}}.mcool", sample=SAMPLES),
+        hic = expand(f"{OUTDIR}/hic/{{sample}}.hic", sample=SAMPLES) if config.get("matrix", {}).get("generate_hic", False) else [],
+        
+        # 4DN pairsqc report
+        pairsqc = expand(f"{OUTDIR}/qc/pairsqc/{{sample}}_report.zip", sample=SAMPLES),
+        
+        # Provenance metadata
+        provenance = f"{OUTDIR}/provenance.json"
+# -----------------------------------------------------------------------------
+# Target: Optional Downstream Analysis Layer (cooltools)
+# -----------------------------------------------------------------------------
+rule downstream:
+    input:
+        expected = expand(f"{OUTDIR}/downstream/expected/{{sample}}_expected_{EXP_RES}bp.tsv", sample=SAMPLES) if config.get("downstream", {}).get("run_expected", True) else [],
+        insulation = expand(f"{OUTDIR}/downstream/insulation/{{sample}}_insulation_{INS_RES}bp.tsv", sample=SAMPLES) if config.get("downstream", {}).get("run_insulation", True) else [],
+        compartments = expand(f"{OUTDIR}/downstream/compartments/{{sample}}_eigs_{COMP_RES}bp.cis.vecs.tsv", sample=SAMPLES) if config.get("downstream", {}).get("run_compartments", True) else []
+
+# -----------------------------------------------------------------------------
+# Default Target: Complete Workflow (4DN Layer + Optional Downstream)
+# -----------------------------------------------------------------------------
+rule all:
+    input:
+        rules.four_dn.input,
+        rules.downstream.input

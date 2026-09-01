@@ -1,0 +1,126 @@
+# =============================================================================
+# 4DN v43 Micro-C / Hi-C Pipeline - Command Cheat Sheet
+# =============================================================================
+# Direct copy-pasteable commands for cluster submission, local testing,
+# dry-runs, troubleshooting, and downstream analysis.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. CLUSTER ENVIRONMENT INITIALIZATION
+# -----------------------------------------------------------------------------
+# Run this once in your login / interactive shell before running any Snakemake command:
+
+module load apptainer/1.3.6
+module load python/3.14.7
+
+# Ensure Apptainer cache is located on your project / scratch disk (not HOME quota)
+export APPTAINER_CACHEDIR="${PWD}/.apptainer_cache"
+mkdir -p "$APPTAINER_CACHEDIR"
+
+
+# -----------------------------------------------------------------------------
+# 2. PREFLIGHT CONTAINER & WRAPPER VERIFICATION
+# -----------------------------------------------------------------------------
+# Verifies Apptainer execution, pulls the official 4DN v43 image, and tests all tools:
+
+./scripts/preflight_check.sh
+
+
+# -----------------------------------------------------------------------------
+# 3. DRY RUNS & DAG VALIDATION (No jobs submitted, zero risk)
+# -----------------------------------------------------------------------------
+
+# Dry run for official 4DN deliverables (shows all shell commands and logs to dry_run.txt):
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm -n -p four_dn | tee dry_run.txt
+
+# Dry run for complete workflow (4DN + cooltools downstream):
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm -n -p all | tee dry_run.txt
+
+# Check for Snakemake lint warnings / style issues:
+snakemake -s workflow/Snakefile --configfile config/config.yaml --lint
+
+# --- Workflow Diagrams (Requires graphviz / dot) ---
+mkdir -p results/dag
+
+# Option A: Collapsed Rule Graph (Collapses all samples into a single clean conceptual diagram):
+snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph four_dn | dot -Tpdf > results/dag/rulegraph_4dn.pdf
+snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph four_dn | dot -Tpng > results/dag/rulegraph_4dn.png
+snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph all | dot -Tpdf > results/dag/rulegraph_all.pdf
+
+# Option B: Single-Sample DAG (Visualizes the execution path for just one sample, e.g. PA_B6xCAST or LE_B6xCAST):
+snakemake -s workflow/Snakefile --configfile config/config.yaml --dag results/mcool/PA_B6xCAST.mcool | dot -Tpdf > results/dag/dag_PA_B6xCAST.pdf
+snakemake -s workflow/Snakefile --configfile config/config.yaml --dag results/mcool/LE_B6xCAST.mcool | dot -Tpdf > results/dag/dag_LE_B6xCAST.pdf
+
+
+# -----------------------------------------------------------------------------
+# 4. SLURM CLUSTER EXECUTION (Main Production Runs)
+# -----------------------------------------------------------------------------
+
+# Scenario A: Run official 4DN processing & QC (Primary deliverables: .pairs.gz, .mcool, pairsqc, FastQC)
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm four_dn
+
+# Scenario B: Run complete pipeline (4DN layer + cooltools P(s), insulation TADs, and A/B compartments)
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm all
+
+# Scenario C: Run ONLY downstream analysis (if matrices .mcool already exist)
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm downstream
+
+# Scenario D: Submit with custom max concurrent jobs (e.g., 50 parallel Slurm jobs)
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm --jobs 50 four_dn
+
+# Scenario E: Override Slurm partition or account on the command line
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm --default-resources slurm_partition="batch" slurm_account="my_lab" four_dn
+
+
+# -----------------------------------------------------------------------------
+# 5. LOCAL / INTERACTIVE NODE EXECUTION (No Slurm cluster queue)
+# -----------------------------------------------------------------------------
+# Use this when running on an interactive compute node allocated with salloc:
+
+# Run on 16 local CPU cores with Apptainer:
+snakemake -s workflow/Snakefile --configfile config/config.yaml --use-apptainer --cores 16 four_dn
+
+# Run complete pipeline locally on 32 CPU cores:
+snakemake -s workflow/Snakefile --configfile config/config.yaml --use-apptainer --cores 32 all
+
+
+# -----------------------------------------------------------------------------
+# 6. SMOKE TESTING (Official 4DN Test Dataset)
+# -----------------------------------------------------------------------------
+
+# Smoke test dry-run:
+snakemake -s workflow/Snakefile --configfile test/test_config.yaml --profile workflow/profiles/slurm -n four_dn
+
+# Run smoke test on Slurm:
+snakemake -s workflow/Snakefile --configfile test/test_config.yaml --profile workflow/profiles/slurm four_dn
+
+# Run smoke test locally (4 cores):
+snakemake -s workflow/Snakefile --configfile test/test_config.yaml --use-apptainer --cores 4 four_dn
+
+
+# -----------------------------------------------------------------------------
+# 7. TROUBLESHOOTING & RECOVERY COMMANDS
+# -----------------------------------------------------------------------------
+
+# Unlock working directory (if a previous run was killed or timed out):
+snakemake -s workflow/Snakefile --configfile config/config.yaml --unlock
+
+# Force rerun incomplete or interrupted jobs:
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm --rerun-incomplete four_dn
+
+# Force rerun a specific rule for all samples (e.g., re-generate matrices only):
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm --forcerun cooler_zoomify four_dn
+
+# Clean intermediate files if needed:
+# rm -rf results/bam results/pairsam results/pairsam_merged results/pairsam_marked results/pairs_filtered results/mcool_raw
+
+
+# -----------------------------------------------------------------------------
+# 8. FULL MULTI-SAMPLE DAG & EXECUTION REPORTS
+# -----------------------------------------------------------------------------
+# Full Detailed DAG (Shows every individual job for all samples & sequencing runs):
+snakemake -s workflow/Snakefile --configfile config/config.yaml --dag four_dn | dot -Tpdf > results/dag/dag_all_samples_4dn.pdf
+snakemake -s workflow/Snakefile --configfile config/config.yaml --dag all | dot -Tpdf > results/dag/dag_all_samples_all.pdf
+
+# Self-contained HTML execution report (after running):
+snakemake -s workflow/Snakefile --configfile config/config.yaml --report results/workflow_report.html
