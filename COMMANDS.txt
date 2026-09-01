@@ -39,17 +39,17 @@ snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workfl
 # Check for Snakemake lint warnings / style issues:
 snakemake -s workflow/Snakefile --configfile config/config.yaml --lint
 
-# --- Workflow Diagrams (Requires graphviz / dot) ---
+# --- Workflow Diagrams (Requires graphviz / dot; generates PDF/PNG viewable in macOS Preview) ---
 mkdir -p results/dag
 
 # Option A: Collapsed Rule Graph (Collapses all samples into a single clean conceptual diagram):
-snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph four_dn | dot -Tpdf > results/dag/rulegraph_4dn.pdf
-snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph four_dn | dot -Tpng > results/dag/rulegraph_4dn.png
-snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph all | dot -Tpdf > results/dag/rulegraph_all.pdf
+snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph=dot four_dn | dot -Tpdf > results/dag/rulegraph_4dn.pdf
+snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph=dot four_dn | dot -Tpng > results/dag/rulegraph_4dn.png
+snakemake -s workflow/Snakefile --configfile config/config.yaml --rulegraph=dot all | dot -Tpdf > results/dag/rulegraph_all.pdf
 
-# Option B: Single-Sample DAG (Visualizes the execution path for just one sample, e.g. PA_B6xCAST or LE_B6xCAST):
-snakemake -s workflow/Snakefile --configfile config/config.yaml --dag results/mcool/PA_B6xCAST.mcool | dot -Tpdf > results/dag/dag_PA_B6xCAST.pdf
-snakemake -s workflow/Snakefile --configfile config/config.yaml --dag results/mcool/LE_B6xCAST.mcool | dot -Tpdf > results/dag/dag_LE_B6xCAST.pdf
+# Option B: Single-Sample DAG (Visualizes execution path for just one sample, e.g. PA_B6xCAST or LE_B6xCAST):
+snakemake -s workflow/Snakefile --configfile config/config.yaml --dag=dot results/mcool/PA_B6xCAST.mcool | dot -Tpdf > results/dag/dag_PA_B6xCAST.pdf
+snakemake -s workflow/Snakefile --configfile config/config.yaml --dag=dot results/mcool/LE_B6xCAST.mcool | dot -Tpdf > results/dag/dag_LE_B6xCAST.pdf
 
 
 # -----------------------------------------------------------------------------
@@ -119,8 +119,8 @@ snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workfl
 # 8. FULL MULTI-SAMPLE DAG & EXECUTION REPORTS
 # -----------------------------------------------------------------------------
 # Full Detailed DAG (Shows every individual job for all samples & sequencing runs):
-snakemake -s workflow/Snakefile --configfile config/config.yaml --dag four_dn | dot -Tpdf > results/dag/dag_all_samples_4dn.pdf
-snakemake -s workflow/Snakefile --configfile config/config.yaml --dag all | dot -Tpdf > results/dag/dag_all_samples_all.pdf
+snakemake -s workflow/Snakefile --configfile config/config.yaml --dag=dot four_dn | dot -Tpdf > results/dag/dag_all_samples_4dn.pdf
+snakemake -s workflow/Snakefile --configfile config/config.yaml --dag=dot all | dot -Tpdf > results/dag/dag_all_samples_all.pdf
 
 # Self-contained HTML execution report (after running):
 snakemake -s workflow/Snakefile --configfile config/config.yaml --report results/workflow_report.html
