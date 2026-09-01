@@ -14,9 +14,9 @@ rule generate_chrom_sizes:
     shell:
         """
         mkdir -p $(dirname {output.chrom_sizes}) $(dirname {log})
-        if [[ "{input.src}" =~ \.ann$ ]]; then
+        if [[ "{input.src}" =~ \\\\.ann$ ]]; then
             awk 'NR>1 {{ if (NR%2==0) {{ name=$2 }} else {{ print name "\\t" $2 }} }}' {input.src} > {output.chrom_sizes} 2> {log}
-        elif [[ "{input.src}" =~ \.fai$ ]]; then
+        elif [[ "{input.src}" =~ \\\\.fai$ ]]; then
             cut -f1,2 {input.src} > {output.chrom_sizes} 2> {log}
         else
             samtools faidx {input.src} > {log} 2>&1

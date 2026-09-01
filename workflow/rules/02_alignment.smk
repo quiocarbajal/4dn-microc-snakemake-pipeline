@@ -24,7 +24,7 @@ rule bwa_mem:
         mkdir -p {params.outdir} $(dirname {log})
         
         # Check if bwa_index is a tar.gz / tgz archive (standard 4DN wrapper format)
-        if [[ -f "{input.bwa_index}" && ( "{input.bwa_index}" =~ \.tar\.gz$ || "{input.bwa_index}" =~ \.tgz$ ) ]]; then
+        if [[ -f "{input.bwa_index}" && ( "{input.bwa_index}" =~ \\\\.tar\\\\.gz$ || "{input.bwa_index}" =~ \\\\.tgz$ ) ]]; then
             /usr/local/bin/run-bwa-mem.sh \
                 {input.fastq1} \
                 {input.fastq2} \
@@ -35,7 +35,7 @@ rule bwa_mem:
         else
             # Pre-indexed directory or index prefix
             if [[ -d "{input.bwa_index}" ]]; then
-                idx_prefix=$(ls -1 {input.bwa_index}/*.bwt 2>/dev/null | head -1 | sed 's/\.bwt//g')
+                idx_prefix=$(ls -1 {input.bwa_index}/*.bwt 2>/dev/null | head -1 | sed 's/\\\\.bwt//g')
                 if [[ -z "$idx_prefix" ]]; then
                     idx_prefix="{input.bwa_index}"
                 fi
