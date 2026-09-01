@@ -16,19 +16,21 @@ rule cooltools_expected:
         mcool = f"{OUTDIR}/mcool/{{sample}}.mcool"
     output:
         expected_tsv = f"{OUTDIR}/downstream/expected/{{sample}}_expected_{EXP_RES}bp.tsv"
+    log:
+        f"{OUTDIR}/logs/cooltools/expected_{{sample}}_{EXP_RES}bp.log"
     params:
-        cooler_uri = f"{OUTDIR}/mcool/{{sample}}.mcool::/resolutions/{EXP_RES}"
+        cooler_uri = lambda wildcards, input: f"{input.mcool}::/resolutions/{EXP_RES}"
     threads:
         4
     container:
         CONTAINER_COOLTOOLS
     shell:
         """
-        mkdir -p $(dirname {output.expected_tsv})
+        mkdir -p $(dirname {output.expected_tsv}) $(dirname {log})
         cooltools expected-cis \
             -p {threads} \
             -o {output.expected_tsv} \
-            {params.cooler_uri}
+            {params.cooler_uri} > {log} 2>&1
         """
 
 # -----------------------------------------------------------------------------
@@ -39,8 +41,10 @@ rule cooltools_insulation:
         mcool = f"{OUTDIR}/mcool/{{sample}}.mcool"
     output:
         insulation_tsv = f"{OUTDIR}/downstream/insulation/{{sample}}_insulation_{INS_RES}bp.tsv"
+    log:
+        f"{OUTDIR}/logs/cooltools/insulation_{{sample}}_{INS_RES}bp.log"
     params:
-        cooler_uri = f"{OUTDIR}/mcool/{{sample}}.mcool::/resolutions/{INS_RES}",
+        cooler_uri = lambda wildcards, input: f"{input.mcool}::/resolutions/{INS_RES}",
         windows = INS_WINDOWS
     threads:
         4
@@ -48,11 +52,11 @@ rule cooltools_insulation:
         CONTAINER_COOLTOOLS
     shell:
         """
-        mkdir -p $(dirname {output.insulation_tsv})
+        mkdir -p $(dirname {output.insulation_tsv}) $(dirname {log})
         cooltools insulation \
             {params.cooler_uri} \
             {params.windows} \
-            --output {output.insulation_tsv}
+            --output {output.insulation_tsv} > {log} 2>&1
         """
 
 # -----------------------------------------------------------------------------
@@ -61,12 +65,14 @@ rule cooltools_insulation:
 rule cooltools_compartments:
     input:
         mcool = f"{OUTDIR}/mcool/{{sample}}.mcool",
-        fasta = config.get("reference", {}).get("fasta", "")
+        fasta = [config.get("reference", {}).get("fasta")] if (config.get("reference", {}).get("fasta") and os.path.exists(config.get("reference", {}).get("fasta", ""))) else []
     output:
         cis_eigs_tsv = f"{OUTDIR}/downstream/compartments/{{sample}}_eigs_{COMP_RES}bp.cis.vecs.tsv"
+    log:
+        f"{OUTDIR}/logs/cooltools/compartments_{{sample}}_{COMP_RES}bp.log"
     params:
-        cooler_uri = f"{OUTDIR}/mcool/{{sample}}.mcool::/resolutions/{COMP_RES}",
-        outprefix = f"{OUTDIR}/downstream/compartments/{{sample}}_eigs_{COMP_RES}bp",
+        cooler_uri = lambda wildcards, input: f"{input.mcool}::/resolutions/{COMP_RES}",
+        outprefix = lambda wildcards, output: output.cis_eigs_tsv.replace('.cis.vecs.tsv', ''),
         fasta_arg = f"--phasing-track {config.get('reference', {}).get('fasta')}" if (config.get("reference", {}).get("fasta") and os.path.exists(config.get("reference", {}).get("fasta", ""))) else ""
     threads:
         4
@@ -74,9 +80,9 @@ rule cooltools_compartments:
         CONTAINER_COOLTOOLS
     shell:
         """
-        mkdir -p $(dirname {output.cis_eigs_tsv})
+        mkdir -p $(dirname {output.cis_eigs_tsv}) $(dirname {log})
         cooltools eigs-cis \
             -o {params.outprefix} \
             {params.fasta_arg} \
-            {params.cooler_uri}
+            {params.cooler_uri} > {log} 2>&1
         """

@@ -3,13 +3,6 @@
 # Uses official 4DN v43 run-bwa-mem.sh inside official container
 # =============================================================================
 
-def get_bam_output(wildcards):
-    bam_path = f"{OUTDIR}/bam/{wildcards.sample}_{wildcards.run}.bam"
-    # If SAVE_BAM is False, mark as temp so Snakemake removes it after pairtools parse
-    if not SAVE_BAM:
-        return temp(bam_path)
-    return bam_path
-
 rule bwa_mem:
     input:
         fastq1 = get_fastq1,
@@ -17,8 +10,10 @@ rule bwa_mem:
         bwa_index = get_bwa_index()
     output:
         bam = temp(f"{OUTDIR}/bam/{{sample}}_{{run}}.bam") if not SAVE_BAM else f"{OUTDIR}/bam/{{sample}}_{{run}}.bam"
+    log:
+        f"{OUTDIR}/logs/bwa_mem/{{sample}}_{{run}}.log"
     params:
-        outdir = f"{OUTDIR}/bam",
+        outdir = lambda wildcards, output: os.path.dirname(output.bam),
         prefix = "{sample}_{run}"
     threads:
         16
@@ -26,7 +21,7 @@ rule bwa_mem:
         CONTAINER_4DN
     shell:
         """
-        mkdir -p {params.outdir}
+        mkdir -p {params.outdir} $(dirname {log})
         
         # Check if bwa_index is a tar.gz / tgz archive (standard 4DN wrapper format)
         if [[ -f "{input.bwa_index}" && ( "{input.bwa_index}" =~ \.tar\.gz$ || "{input.bwa_index}" =~ \.tgz$ ) ]]; then
@@ -36,7 +31,7 @@ rule bwa_mem:
                 {input.bwa_index} \
                 {params.outdir} \
                 {params.prefix} \
-                {threads}
+                {threads} > {log} 2>&1
         else
             # Pre-indexed directory or index prefix
             if [[ -d "{input.bwa_index}" ]]; then
@@ -49,6 +44,6 @@ rule bwa_mem:
             fi
             
             # Execute 4DN standard bwa mem mapping with -SP5M
-            bwa mem -t {threads} -SP5M "$idx_prefix" {input.fastq1} {input.fastq2} | samtools view -Shb - > {output.bam}
+            bwa mem -t {threads} -SP5M "$idx_prefix" {input.fastq1} {input.fastq2} 2> {log} | samtools view -Shb - > {output.bam} 2>> {log}
         fi
         """
