@@ -32,5 +32,7 @@ rule record_provenance:
         },
         samples = SAMPLES,
         sample_runs = SAMPLE_RUNS
+    container:
+        CONTAINER_4DN
     script:
         "../../scripts/record_provenance.py"

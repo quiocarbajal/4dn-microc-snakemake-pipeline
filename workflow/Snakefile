@@ -7,6 +7,7 @@
 
 # Include modular rule specifications
 include: "rules/00_common.smk"
+include: "rules/00_reference.smk"
 include: "rules/01_qc.smk"
 include: "rules/02_alignment.smk"
 include: "rules/03_pairtools.smk"
