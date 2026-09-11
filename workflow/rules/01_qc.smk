@@ -19,11 +19,11 @@ rule fastqc_r1:
     threads:
         4
     container:
-        CONTAINER_4DN
+        CONTAINER_FASTQC
     shell:
         """
         mkdir -p {params.outdir} $(dirname {log})
-        /usr/local/bin/run-fastqc.sh {input.fastq} {threads} {params.outdir} > {log} 2>&1
+        fastqc -t {threads} -o {params.outdir} {input.fastq} > {log} 2>&1
         
         # Standardize output filenames
         mv {params.outdir}/*_fastqc.zip {output.zip}
@@ -44,11 +44,11 @@ rule fastqc_r2:
     threads:
         4
     container:
-        CONTAINER_4DN
+        CONTAINER_FASTQC
     shell:
         """
         mkdir -p {params.outdir} $(dirname {log})
-        /usr/local/bin/run-fastqc.sh {input.fastq} {threads} {params.outdir} > {log} 2>&1
+        fastqc -t {threads} -o {params.outdir} {input.fastq} > {log} 2>&1
         
         # Standardize output filenames
         mv {params.outdir}/*_fastqc.zip {output.zip}
@@ -100,9 +100,7 @@ rule pairsqc_merge:
     log:
         f"{OUTDIR}/logs/pairsqc/merge_{{condition}}.log"
     params:
-        outdir = lambda wildcards, output: os.path.dirname(output.report_zip),
-        outprefix = lambda wildcards, output: f"{wildcards.condition}_merged",
-        enzyme = config.get("qc", {}).get("pairsqc_enzyme", "4")
+        outdir = lambda wildcards, output: os.path.dirname(output.report_zip)
     threads:
         2
     container:
@@ -110,9 +108,18 @@ rule pairsqc_merge:
     shell:
         """
         mkdir -p {params.outdir} $(dirname {log})
+        
+        # Clean any unzipped scratch folder with this prefix to prevent interactive overwrite prompts
+        rm -rf $(basename {output.report_zip} .zip)
+        
         /usr/local/bin/run-pairsqc-merge.sh \
             {params.outdir} \
-            {params.outprefix} \
-            {params.enzyme} \
             {input.reports} > {log} 2>&1
+            
+        # Standardize merged report zip name
+        if [ -f "{params.outdir}/merged_report.zip" ] && [ "{output.report_zip}" != "{params.outdir}/merged_report.zip" ]; then
+            mv {params.outdir}/merged_report.zip {output.report_zip}
+        elif [ -f "merged_report.zip" ]; then
+            mv merged_report.zip {output.report_zip}
+        fi
         """
