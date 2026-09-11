@@ -100,7 +100,9 @@ rule pairsqc_merge:
     log:
         f"{OUTDIR}/logs/pairsqc/merge_{{condition}}.log"
     params:
-        outdir = lambda wildcards, output: os.path.dirname(output.report_zip)
+        outdir = lambda wildcards, output: os.path.dirname(output.report_zip),
+        outprefix = lambda wildcards, output: f"{wildcards.condition}_merged",
+        enzyme = config.get("qc", {}).get("pairsqc_enzyme", "4")
     threads:
         2
     container:
@@ -109,17 +111,32 @@ rule pairsqc_merge:
         """
         mkdir -p {params.outdir} $(dirname {log})
         
-        # Clean any unzipped scratch folder with this prefix to prevent interactive overwrite prompts
-        rm -rf $(basename {output.report_zip} .zip)
+        # Working paths
+        outreportdir="{params.outdir}/{params.outprefix}_report"
+        tmp_unzip="{params.outdir}/tmp_unzip_{wildcards.condition}"
+        rm -rf "$outreportdir" "$tmp_unzip"
+        mkdir -p "$outreportdir" "$tmp_unzip"
         
-        /usr/local/bin/run-pairsqc-merge.sh \
-            {params.outdir} \
-            {input.reports} > {log} 2>&1
-            
-        # Standardize merged report zip name
-        if [ -f "{params.outdir}/merged_report.zip" ] && [ "{output.report_zip}" != "{params.outdir}/merged_report.zip" ]; then
-            mv {params.outdir}/merged_report.zip {output.report_zip}
-        elif [ -f "merged_report.zip" ]; then
-            mv merged_report.zip {output.report_zip}
-        fi
+        # Unzip all input replicate reports into isolated scratch folder
+        for file in {input.reports}; do
+            unzip -o -q "$file" -d "$tmp_unzip"
+        done
+        
+        # Correctly copy from unzipped report dirs into outreportdir (fixing upstream 4DN bug)
+        for rdir in "$tmp_unzip"/*_report; do
+            if [ -d "$rdir" ]; then
+                cp -r "$rdir"/* "$outreportdir"/
+            fi
+        done
+        rm -rf "$outreportdir/plots"
+        
+        # Run 4DN R report generation
+        Rscript /usr/local/bin/pairsqc/plot.r {params.enzyme} "$outreportdir" > {log} 2>&1
+        
+        # Package into final zip deliverable
+        (cd {params.outdir} && zip -r -q "{params.outprefix}_report.zip" "{params.outprefix}_report")
+        mv "{params.outdir}/{params.outprefix}_report.zip" {output.report_zip}
+        
+        # Cleanup scratch
+        rm -rf "$tmp_unzip" "$outreportdir"
         """
