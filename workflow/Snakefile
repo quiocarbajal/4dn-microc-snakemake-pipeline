@@ -20,9 +20,9 @@ include: "rules/06_provenance.smk"
 # -----------------------------------------------------------------------------
 rule four_dn:
     input:
-        # FastQC read quality control (for each sample and run)
-        fastqc_r1 = [f"{OUTDIR}/qc/fastqc/{s}_{r}_R1_fastqc.zip" for s, r in SAMPLE_RUN_MAP.keys()],
-        fastqc_r2 = [f"{OUTDIR}/qc/fastqc/{s}_{r}_R2_fastqc.zip" for s, r in SAMPLE_RUN_MAP.keys()],
+        # FastQC read quality control (optional, controlled by config["qc"]["run_fastqc"])
+        fastqc_r1 = [f"{OUTDIR}/qc/fastqc/{s}_{r}_R1_fastqc.zip" for s, r in SAMPLE_RUN_MAP.keys()] if config.get("qc", {}).get("run_fastqc", True) else [],
+        fastqc_r2 = [f"{OUTDIR}/qc/fastqc/{s}_{r}_R2_fastqc.zip" for s, r in SAMPLE_RUN_MAP.keys()] if config.get("qc", {}).get("run_fastqc", True) else [],
         
         # Optional BAM retention
         bam = [f"{OUTDIR}/bam/{s}_{r}.bam" for s, r in SAMPLE_RUN_MAP.keys()] if SAVE_BAM else [],
@@ -36,14 +36,14 @@ rule four_dn:
         hic = expand(f"{OUTDIR}/hic/{{sample}}.hic", sample=SAMPLES) if config.get("matrix", {}).get("generate_hic", False) else [],
         
         # Individual biological replicate 4DN pairsqc reports
-        pairsqc = expand(f"{OUTDIR}/qc/pairsqc/{{sample}}_report.zip", sample=SAMPLES),
+        pairsqc = expand(f"{OUTDIR}/qc/pairsqc/{{sample}}_report.zip", sample=SAMPLES) if config.get("qc", {}).get("run_pairsqc", True) else [],
         
         # Merged biological replicate deliverables (for conditions with >1 biological replicate)
         merged_pairs = expand(f"{OUTDIR}/pairs_merged/{{condition}}.merged.ff.pairs.gz", condition=MULTI_REP_CONDITIONS),
         merged_px2 = expand(f"{OUTDIR}/pairs_merged/{{condition}}.merged.ff.pairs.gz.px2", condition=MULTI_REP_CONDITIONS),
         merged_mcool = expand(f"{OUTDIR}/mcool_merged/{{condition}}.mcool", condition=MULTI_REP_CONDITIONS),
         merged_hic = expand(f"{OUTDIR}/hic_merged/{{condition}}.hic", condition=MULTI_REP_CONDITIONS) if config.get("matrix", {}).get("generate_hic", False) else [],
-        merged_pairsqc = expand(f"{OUTDIR}/qc/pairsqc_merged/{{condition}}_merged_report.zip", condition=MULTI_REP_CONDITIONS),
+        merged_pairsqc = expand(f"{OUTDIR}/qc/pairsqc_merged/{{condition}}_merged_report.zip", condition=MULTI_REP_CONDITIONS) if config.get("qc", {}).get("run_pairsqc", True) else [],
         
         # Provenance metadata
         provenance = f"{OUTDIR}/provenance.json"
