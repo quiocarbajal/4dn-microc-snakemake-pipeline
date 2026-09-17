@@ -47,7 +47,7 @@ rule cooltools_insulation:
         cooler_uri = lambda wildcards, input: f"{input.mcool}::/resolutions/{INS_RES}",
         windows = INS_WINDOWS
     threads:
-        4
+        2
     container:
         CONTAINER_COOLTOOLS
     shell:
@@ -75,7 +75,7 @@ rule cooltools_compartments:
         outprefix = lambda wildcards, output: output.cis_eigs_tsv.replace('.cis.vecs.tsv', ''),
         fasta_arg = f"--phasing-track {config.get('reference', {}).get('fasta')}" if (config.get("reference", {}).get("fasta") and os.path.exists(config.get("reference", {}).get("fasta", ""))) else ""
     threads:
-        4
+        2
     container:
         CONTAINER_COOLTOOLS
     shell:

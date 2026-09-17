@@ -17,7 +17,7 @@ rule fastqc_r1:
     params:
         outdir = lambda wildcards, output: f"{os.path.dirname(output.zip)}/tmp_{wildcards.sample}_{wildcards.run}_R1"
     threads:
-        4
+        2
     container:
         CONTAINER_FASTQC
     shell:
@@ -42,7 +42,7 @@ rule fastqc_r2:
     params:
         outdir = lambda wildcards, output: f"{os.path.dirname(output.zip)}/tmp_{wildcards.sample}_{wildcards.run}_R2"
     threads:
-        4
+        2
     container:
         CONTAINER_FASTQC
     shell:
@@ -74,7 +74,7 @@ rule pairsqc:
         max_dist = config.get("qc", {}).get("pairsqc_max_distance", 8.4),
         outdir = lambda wildcards, output: os.path.dirname(output.report_zip)
     threads:
-        4
+        2
     container:
         CONTAINER_4DN
     shell:
@@ -135,7 +135,9 @@ rule pairsqc_merge:
         
         # Package into final zip deliverable
         (cd {params.outdir} && zip -r -q "{params.outprefix}_report.zip" "{params.outprefix}_report")
-        mv "{params.outdir}/{params.outprefix}_report.zip" {output.report_zip}
+        if [ "{params.outdir}/{params.outprefix}_report.zip" != "{output.report_zip}" ]; then
+            mv "{params.outdir}/{params.outprefix}_report.zip" {output.report_zip}
+        fi
         
         # Cleanup scratch
         rm -rf "$tmp_unzip" "$outreportdir"

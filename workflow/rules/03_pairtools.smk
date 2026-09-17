@@ -73,7 +73,7 @@ rule pairsam_markasdup:
     params:
         outprefix = lambda wildcards, output: output.marked_pairsam.replace('.marked.sam.pairs.gz', '')
     threads:
-        4
+        2
     container:
         CONTAINER_4DN
     shell:
@@ -101,7 +101,7 @@ rule pairsam_filter:
     params:
         outprefix = lambda wildcards, output: output.dedup_pairs.replace('.dedup.pairs.gz', '')
     threads:
-        4
+        2
     container:
         CONTAINER_4DN
     shell:
@@ -162,7 +162,7 @@ rule merge_bio_reps:
     params:
         outprefix = lambda wildcards, output: output.merged_ff_pairs.replace('.pairs.gz', '')
     threads:
-        8
+        2
     container:
         CONTAINER_4DN
     shell:

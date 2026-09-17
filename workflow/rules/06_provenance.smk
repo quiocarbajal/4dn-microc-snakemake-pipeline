@@ -14,6 +14,7 @@ rule record_provenance:
     params:
         containers = {
             "4dn_hic": CONTAINER_4DN,
+            "fastqc": CONTAINER_FASTQC,
             "cooltools": CONTAINER_COOLTOOLS,
             "multiqc": CONTAINER_MULTIQC
         },

@@ -11,12 +11,13 @@ jobs: 100
 # Enable native Apptainer execution
 use-apptainer: true
 
-# Apptainer execution arguments (bind host scratch and temporary directories)
-apptainer-args: "--bind /scratch,/tmp"
+# Apptainer execution arguments (bind shared lab filesystem and read-only reference archive)
+apptainer-args: "--bind /s/pezzar-lab,/archive/cbds:/archive/cbds:ro"
 
 # General execution settings
 printshellcmds: true
-keep-going: true
+keep-going: false
+retries: 0
 rerun-incomplete: true
 latency-wait: 60
 
@@ -24,65 +25,69 @@ latency-wait: 60
 slurm-logdir: "logs/slurm"
 slurm-keep-successful-logs: true
 
-# Default cluster resources (overridden per rule if defined)
+# Default cluster resources (no timelimits specified; uses cluster partition defaults)
 default-resources:
   slurm_partition: ""
   slurm_account: ""
-  runtime: 120 # walltime in minutes
+  tmpdir: "results/tmp"
   mem_mb: 4096
   threads: 2
 
 # Per-rule resource specifications
+# Note: Any rule omitted or missing an attribute automatically inherits from default-resources (threads: 2, mem_mb: 4096).
 set-resources:
-  bwa_mem:
-    threads: 16
-    mem_mb: 32768
-    runtime: 720
+  # ---------------------------------------------------------------------------
+  # A. Rules with Multi-Core Parallelism (threads != 2)
+  # ---------------------------------------------------------------------------
   pairsam_parse_sort:
     threads: 16
     mem_mb: 65536
-    runtime: 720
-  pairsam_merge_seq_reps:
-    threads: 8
-    mem_mb: 16384
-    runtime: 480
-  pairsam_markasdup:
-    threads: 4
-    mem_mb: 32768
-    runtime: 480
-  pairsam_filter:
-    threads: 4
-    mem_mb: 32768
-    runtime: 480
-  cooler_cload:
+  bwa_mem:
     threads: 8
     mem_mb: 32768
-    runtime: 480
   cooler_zoomify:
     threads: 8
     mem_mb: 49152
-    runtime: 480
-  juicebox_pre:
+  cooler_zoomify_merged:
     threads: 8
-    mem_mb: 65536
-    runtime: 720
-  add_hic_norm_to_mcool:
-    threads: 4
+    mem_mb: 49152
+  pairsam_merge_seq_reps:
+    threads: 8
     mem_mb: 16384
-    runtime: 240
-  pairsqc:
+  cooler_cload:
     threads: 4
-    mem_mb: 16384
-    runtime: 240
+    mem_mb: 32768
+  cooler_cload_merged:
+    threads: 4
+    mem_mb: 32768
   cooltools_expected:
     threads: 4
     mem_mb: 16384
-    runtime: 240
+
+  # ---------------------------------------------------------------------------
+  # B. Rules with Default Cores (threads: 2 inherited) and Custom Memory
+  # ---------------------------------------------------------------------------
+  juicebox_pre:
+    mem_mb: 65536
+  juicebox_pre_merged:
+    mem_mb: 65536
+  pairsam_markasdup:
+    mem_mb: 32768
+  pairsam_filter:
+    mem_mb: 32768
+  merge_bio_reps:
+    mem_mb: 16384
+  add_hic_norm_to_mcool:
+    mem_mb: 16384
+  pairsqc:
+    mem_mb: 16384
   cooltools_insulation:
-    threads: 4
     mem_mb: 16384
-    runtime: 240
   cooltools_compartments:
-    threads: 4
     mem_mb: 16384
-    runtime: 240
+  pairsqc_merge:
+    mem_mb: 8192
+
+  # (Rules matching default threads: 2 and mem_mb: 4096 like fastqc_r1, fastqc_r2,
+  # and addfrag_or_pass are completely covered by default-resources above)
+

@@ -20,7 +20,7 @@ rule cooler_cload:
         bin_size = BASE_RES,
         max_split = 2
     threads:
-        8
+        4
     container:
         CONTAINER_4DN
     shell:
@@ -78,7 +78,7 @@ if config.get("matrix", {}).get("generate_hic", False) and config.get("matrix", 
         params:
             outdir = lambda wildcards, output: f"{os.path.dirname(output.mcool)}/tmp_{wildcards.sample}"
         threads:
-            4
+            2
         container:
             CONTAINER_4DN
         shell:
@@ -139,7 +139,7 @@ rule juicebox_pre:
         maxmem = lambda wildcards, resources: f"{max(1, int(resources.mem_mb // 1024))}g",
         no_balance_flag = "" if config.get("matrix", {}).get("balance", True) else "-B"
     threads:
-        8
+        2
     container:
         CONTAINER_4DN
     shell:
@@ -172,7 +172,7 @@ rule cooler_cload_merged:
         bin_size = BASE_RES,
         max_split = 2
     threads:
-        8
+        4
     container:
         CONTAINER_4DN
     shell:
@@ -231,7 +231,7 @@ rule juicebox_pre_merged:
         maxmem = lambda wildcards, resources: f"{max(1, int(resources.mem_mb // 1024))}g",
         no_balance_flag = "" if config.get("matrix", {}).get("balance", True) else "-B"
     threads:
-        8
+        2
     container:
         CONTAINER_4DN
     shell:
