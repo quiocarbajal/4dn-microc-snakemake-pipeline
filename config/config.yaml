@@ -111,6 +111,9 @@ containers:
   # Official 4DN release v43 image containing bwa, pairtools, cooler, juicer_tools, pairix, pairsqc
   4dn_hic: "docker://duplexa/4dn-hic:v43"
   
+  # Standard FastQC container image
+  fastqc: "docker://quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0"
+  
   # Downstream cooltools container for P(s), insulation, and compartment calling
   cooltools: "docker://open2c/cooltools:v0.6.1"
   
