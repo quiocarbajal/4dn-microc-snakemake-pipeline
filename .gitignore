@@ -1,0 +1,53 @@
+# =============================================================================
+# Git Ignore Rules for 4DN Micro-C / Hi-C Snakemake Pipeline
+# =============================================================================
+
+# Local assistant configuration
+AGENTS.md
+
+# Operating System & Editor Metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea/
+
+# Snakemake metadata, lockfiles, and shadow directories
+.snakemake/
+
+# Apptainer / Singularity container cache and images
+.apptainer_cache/
+*.sif
+
+# Pipeline execution logs and terminal dumps
+logs/
+results/logs/
+*.log
+*.log.*
+*_tmux_output.txt
+dry_run*.txt
+summary_usage_of_resources.txt
+
+# Pipeline output data & deliverables (BAMs, pairs, cool, mcool, hic, QC zips)
+results/
+data/
+
+# Python byte-code and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# R environment & session objects
+.Rhistory
+.RData
+.Ruserdata/
+
+# Temporary and scratch files
+*.tmp
+*.temp
+results/tmp/
