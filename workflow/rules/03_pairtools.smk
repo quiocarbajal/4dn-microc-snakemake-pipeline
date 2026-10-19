@@ -102,6 +102,10 @@ rule pairsam_filter:
         outprefix = lambda wildcards, output: output.dedup_pairs.replace('.dedup.pairs.gz', '')
     threads:
         2
+    # run-pairsam-filter.sh writes fixed-name temp.gz / temp1.gz into the working
+    # directory; a per-job shadow directory stops concurrent samples overwriting them
+    shadow:
+        "minimal"
     container:
         CONTAINER_4DN
     shell:
