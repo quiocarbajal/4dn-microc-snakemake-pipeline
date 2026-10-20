@@ -92,6 +92,10 @@ set-resources:
     mem_mb: 16384
   pairsqc_merge:
     mem_mb: 8192
+  raichu_normalization:
+    mem_mb: 5120
+  raichu_normalization_merged:
+    mem_mb: 5120
 
   # (Rules matching default threads: 2 and mem_mb: 4096 like fastqc_r1, fastqc_r2,
   # and addfrag_or_pass are completely covered by default-resources above)
