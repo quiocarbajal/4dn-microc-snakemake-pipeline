@@ -18,8 +18,8 @@ rule fastqc_r1:
         outdir = lambda wildcards, output: f"{os.path.dirname(output.zip)}/tmp_{wildcards.sample}_{wildcards.run}_R1"
     threads:
         2
-    container:
-        CONTAINER_FASTQC
+    envmodules:
+        MODULE_FASTQC
     shell:
         """
         mkdir -p {params.outdir} $(dirname {log})
@@ -43,8 +43,8 @@ rule fastqc_r2:
         outdir = lambda wildcards, output: f"{os.path.dirname(output.zip)}/tmp_{wildcards.sample}_{wildcards.run}_R2"
     threads:
         2
-    container:
-        CONTAINER_FASTQC
+    envmodules:
+        MODULE_FASTQC
     shell:
         """
         mkdir -p {params.outdir} $(dirname {log})

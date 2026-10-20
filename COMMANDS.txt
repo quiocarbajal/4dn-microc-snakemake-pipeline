@@ -84,6 +84,9 @@ snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workfl
 # Scenario 4: Submit with custom max concurrent jobs (e.g., 50 parallel Slurm jobs)
 snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm --jobs 50 four_dn
 
+# Scenario 5: Run ONLY FastQC read quality control (runs cluster module fastqc/0.12.1)
+snakemake -s workflow/Snakefile --configfile config/config.yaml --profile workflow/profiles/slurm fastqc
+
 # --- Step D: Disconnecting and Reconnecting ---
 # To detach and safely shut down your laptop/terminal:
 #   Press:  Ctrl + b   then press   d

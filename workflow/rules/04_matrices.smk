@@ -144,6 +144,9 @@ rule juicebox_pre:
         no_balance_flag = "" if config.get("matrix", {}).get("balance", True) else "-B"
     threads:
         2
+    # Default so params.maxmem works without a profile; the Slurm profile's set-resources overrides it
+    resources:
+        mem_mb = 65536
     container:
         CONTAINER_4DN
     shell:
@@ -240,6 +243,9 @@ rule juicebox_pre_merged:
         no_balance_flag = "" if config.get("matrix", {}).get("balance", True) else "-B"
     threads:
         2
+    # Default so params.maxmem works without a profile; the Slurm profile's set-resources overrides it
+    resources:
+        mem_mb = 65536
     container:
         CONTAINER_4DN
     shell:
@@ -253,4 +259,61 @@ rule juicebox_pre_merged:
             -u {params.resolutions} \
             -m {params.maxmem} \
             {params.no_balance_flag} > {log} 2>&1
+        """
+
+# -----------------------------------------------------------------------------
+# 5. Raichu Normalization (In-Place)
+# -----------------------------------------------------------------------------
+rule raichu_normalization:
+    input:
+        mcool = f"{OUTDIR}/mcool/{{sample}}.mcool"
+    output:
+        done = touch(f"{OUTDIR}/mcool/{{sample}}.raichu_done")
+    log:
+        f"{OUTDIR}/logs/raichu/raichu_{{sample}}.log"
+    params:
+        resolutions = config.get("matrix", {}).get("raichu_resolutions", [5000, 10000]),
+        venv = config.get("matrix", {}).get("raichu_venv", "/hpc-prj/pezza/Agustin/environments/raichu")
+    threads:
+        8
+    shell:
+        """
+        module purge
+        module load slurm python/3.10.2
+        unset PYTHONPATH PYTHONHOME
+        export PYTHONNOUSERSITE=1
+        export HDF5_USE_FILE_LOCKING=FALSE
+        source {params.venv}/bin/activate
+        
+        for res in {params.resolutions}; do
+            echo "Running raichu for resolution $res on {input.mcool}" >> {log}
+            raichu --cool-uri "{input.mcool}::/resolutions/$res" --window-size 200 -p {threads} -n raichu_weight -f >> {log} 2>&1
+        done
+        """
+
+rule raichu_normalization_merged:
+    input:
+        mcool = f"{OUTDIR}/mcool_merged/{{condition}}.mcool"
+    output:
+        done = touch(f"{OUTDIR}/mcool_merged/{{condition}}.raichu_done")
+    log:
+        f"{OUTDIR}/logs/raichu/raichu_merged_{{condition}}.log"
+    params:
+        resolutions = config.get("matrix", {}).get("raichu_resolutions", [5000, 10000]),
+        venv = config.get("matrix", {}).get("raichu_venv", "/hpc-prj/pezza/Agustin/environments/raichu")
+    threads:
+        8
+    shell:
+        """
+        module purge
+        module load slurm python/3.10.2
+        unset PYTHONPATH PYTHONHOME
+        export PYTHONNOUSERSITE=1
+        export HDF5_USE_FILE_LOCKING=FALSE
+        source {params.venv}/bin/activate
+        
+        for res in {params.resolutions}; do
+            echo "Running raichu for resolution $res on {input.mcool}" >> {log}
+            raichu --cool-uri "{input.mcool}::/resolutions/$res" --window-size 200 -p {threads} -n raichu_weight -f >> {log} 2>&1
+        done
         """

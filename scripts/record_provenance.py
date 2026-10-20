@@ -9,7 +9,10 @@ def calculate_checksum(filepath):
     try:
         h = hashlib.sha256()
         with open(filepath, "rb") as f:
-            while chunk := f.read(8192):
+            while True:
+                chunk = f.read(65536)
+                if not chunk:
+                    break
                 h.update(chunk)
         return h.hexdigest()
     except Exception:

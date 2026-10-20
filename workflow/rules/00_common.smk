@@ -63,9 +63,10 @@ for _, row in samples_df.iterrows():
 # Global variables and paths
 OUTDIR = config.get("outdir", "results")
 CONTAINER_4DN = config.get("containers", {}).get("4dn_hic", "docker://duplexa/4dn-hic:v43")
-CONTAINER_FASTQC = config.get("containers", {}).get("fastqc", "docker://quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0")
-CONTAINER_COOLTOOLS = config.get("containers", {}).get("cooltools", "docker://open2c/cooltools:v0.6.1")
 CONTAINER_MULTIQC = config.get("containers", {}).get("multiqc", "docker://multiqc/multiqc:v1.27")
+
+MODULE_FASTQC = config.get("envmodules", {}).get("fastqc", "fastqc/0.12.1")
+MODULE_COOLTOOLS = config.get("envmodules", {}).get("cooltools", "cooltools/0.7.1")
 
 SAVE_BAM = config.get("save_bam", False)
 EXPERIMENT_TYPE = config.get("experiment_type", "micro_c").lower()

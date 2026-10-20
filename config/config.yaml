@@ -74,6 +74,13 @@ matrix:
   # Extract Juicer normalization vectors from .hic and inject them into .mcool
   add_juicer_norms_to_mcool: false
 
+  # Run raichu normalization in-place on .mcool files
+  run_raichu: false
+  raichu_venv: "/hpc-prj/pezza/Agustin/environments/raichu"
+  raichu_resolutions:
+    - 5000
+    - 10000
+
 # -----------------------------------------------------------------------------
 # 4. Official 4DN QC & Tool Parameters
 # -----------------------------------------------------------------------------
@@ -106,17 +113,16 @@ downstream:
   compartment_resolution: 50000
 
 # -----------------------------------------------------------------------------
-# 6. Containers (Apptainer / Singularity)
+# 6. Environment Modules & Containers
 # -----------------------------------------------------------------------------
+# Cluster HPC modules (loaded on host node via Lmod / environment-modules)
+envmodules:
+  fastqc: "fastqc/0.12.1"
+  cooltools: "cooltools/0.7.1"
+
 containers:
   # Official 4DN release v43 image containing bwa, pairtools, cooler, juicer_tools, pairix, pairsqc
   4dn_hic: "docker://duplexa/4dn-hic:v43"
-  
-  # Standard FastQC container image
-  fastqc: "docker://quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0"
-  
-  # Downstream cooltools container for P(s), insulation, and compartment calling
-  cooltools: "docker://open2c/cooltools:v0.6.1"
   
   # MultiQC container for report aggregation
   multiqc: "docker://multiqc/multiqc:v1.27"

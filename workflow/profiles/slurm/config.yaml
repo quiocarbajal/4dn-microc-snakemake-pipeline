@@ -12,6 +12,9 @@ jobs: 100
 use-apptainer: true
 apptainer-prefix: "/hpc-prj/pezza/containers/microc_4DN_pipeline_apptainer_cache"
 
+# Enable environment modules execution for rules requesting cluster modules
+use-envmodules: true
+
 # Apptainer execution arguments (bind shared lab filesystem and read-only reference archive)
 apptainer-args: "--bind /s/pezzar-lab,/hpc-prj/pezza,/Volumes/shared-refs:/Volumes/shared-refs:ro,/archive/cbds:/archive/cbds:ro"
 
@@ -20,7 +23,8 @@ printshellcmds: true
 keep-going: false
 retries: 0
 rerun-incomplete: true
-latency-wait: 60
+latency-wait: 120
+max-status-checks-per-second: 0.2
 
 # Slurm executor plugin specific settings
 slurm-logdir: "logs/slurm"

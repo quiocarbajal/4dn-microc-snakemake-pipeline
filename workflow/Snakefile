@@ -16,6 +16,14 @@ include: "rules/05_downstream.smk"
 include: "rules/06_provenance.smk"
 
 # -----------------------------------------------------------------------------
+# Target: FastQC Read Quality Control Only
+# -----------------------------------------------------------------------------
+rule fastqc:
+    input:
+        fastqc_r1 = [f"{OUTDIR}/qc/fastqc/{s}_{r}_R1_fastqc.zip" for s, r in SAMPLE_RUN_MAP.keys()],
+        fastqc_r2 = [f"{OUTDIR}/qc/fastqc/{s}_{r}_R2_fastqc.zip" for s, r in SAMPLE_RUN_MAP.keys()]
+
+# -----------------------------------------------------------------------------
 # Target: 4DN Official Processing & QC Layer (Primary Deliverables)
 # -----------------------------------------------------------------------------
 rule four_dn:
@@ -44,6 +52,10 @@ rule four_dn:
         merged_mcool = expand(f"{OUTDIR}/mcool_merged/{{condition}}.mcool", condition=MULTI_REP_CONDITIONS),
         merged_hic = expand(f"{OUTDIR}/hic_merged/{{condition}}.hic", condition=MULTI_REP_CONDITIONS) if config.get("matrix", {}).get("generate_hic", False) else [],
         merged_pairsqc = expand(f"{OUTDIR}/qc/pairsqc_merged/{{condition}}_merged_report.zip", condition=MULTI_REP_CONDITIONS) if config.get("qc", {}).get("run_pairsqc", True) else [],
+        
+        # Optional Raichu Normalization
+        raichu = expand(f"{OUTDIR}/mcool/{{sample}}.raichu_done", sample=SAMPLES) if config.get("matrix", {}).get("run_raichu", False) else [],
+        merged_raichu = expand(f"{OUTDIR}/mcool_merged/{{condition}}.raichu_done", condition=MULTI_REP_CONDITIONS) if config.get("matrix", {}).get("run_raichu", False) else [],
         
         # Provenance metadata
         provenance = f"{OUTDIR}/provenance.json"
