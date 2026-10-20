@@ -85,7 +85,7 @@ def find_reference_file(extensions):
     if fa and os.path.exists(fa):
         return fa
     
-    bwa_idx = config.get("reference", {}).get("bwa_index", "") or config.get("reference", {}).get("bwa_index_tgz", "")
+    bwa_idx = config.get("reference", {}).get("bwa_index", "")
     if bwa_idx and os.path.isdir(bwa_idx):
         try:
             for f in os.listdir(bwa_idx):
@@ -114,10 +114,16 @@ def get_chrom_sizes():
     return f"{OUTDIR}/reference/chrom.sizes"
 
 def get_bwa_index():
-    idx = config.get("reference", {}).get("bwa_index", "") or config.get("reference", {}).get("bwa_index_tgz", "")
+    # BWA index archives (.tar.gz/.tgz) are not supported: the 4DN run-bwa-mem.sh wrapper they
+    # require writes fixed-name files into the shared output directory (see 02_alignment.smk)
+    if config.get("reference", {}).get("bwa_index_tgz", ""):
+        sys.exit("Error: reference.bwa_index_tgz is no longer supported. Unpack the archive and set reference.bwa_index to the index directory.")
+    idx = config.get("reference", {}).get("bwa_index", "")
+    if idx.endswith((".tar.gz", ".tgz")):
+        sys.exit(f"Error: reference.bwa_index '{idx}' is an archive, which is not supported. Unpack it and set reference.bwa_index to the index directory.")
     if idx:
         return idx
-    return f"{OUTDIR}/reference/bwa_index.tar.gz"
+    return f"{OUTDIR}/reference/bwa_index"
 
 def get_chrom_sizes_source():
     fa = config.get("reference", {}).get("fasta", "")

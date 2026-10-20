@@ -24,24 +24,21 @@ rule generate_chrom_sizes:
         fi
         """
 
-rule build_bwa_index_archive:
+rule build_bwa_index:
     input:
         fasta = lambda wildcards: config.get("reference", {}).get("fasta", "") or "reference/genome.fasta"
     output:
-        bwa_index_tgz = f"{OUTDIR}/reference/bwa_index.tar.gz"
+        bwa_index_dir = directory(f"{OUTDIR}/reference/bwa_index")
     log:
         f"{OUTDIR}/logs/reference/build_bwa_index.log"
     params:
-        tmp_dir = lambda wildcards, output: f"{os.path.dirname(output[0])}/bwa_tmp",
-        prefix = lambda wildcards, output: f"{os.path.dirname(output[0])}/bwa_tmp/genome"
+        prefix = lambda wildcards, output: f"{output.bwa_index_dir}/genome"
     threads:
         8
     container:
         CONTAINER_4DN
     shell:
         """
-        mkdir -p {params.tmp_dir} $(dirname {log})
+        mkdir -p {output.bwa_index_dir} $(dirname {log})
         bwa index -p {params.prefix} {input.fasta} > {log} 2>&1
-        tar -czf {output.bwa_index_tgz} -C {params.tmp_dir} . >> {log} 2>&1
-        rm -rf {params.tmp_dir}
         """

@@ -11,7 +11,7 @@ A production-ready **Snakemake 9** workflow reproducing the official **4D Nucleo
 ## Key Features
 
 1. **Faithful 4DN v43 Reproduction**:
-   - Executes the exact, unmodified 4DN wrapper scripts directly from the official container (`run-bwa-mem.sh`, `run-pairsam-parse-sort.sh`, `run-pairsam-merge.sh`, `run-pairsam-markasdup.sh`, `run-pairsam-filter.sh`, `run-cooler.sh`, `run-cool2multirescool.sh`, `run-juicebox-pre.sh`, `run-add-hicnormvector-to-mcool.sh`, `run-pairsqc-single.sh`).
+   - Executes the exact, unmodified 4DN wrapper scripts directly from the official container (`run-pairsam-parse-sort.sh`, `run-pairsam-merge.sh`, `run-pairsam-markasdup.sh`, `run-pairsam-filter.sh`, `run-cooler.sh`, `run-cool2multirescool.sh`, `run-juicebox-pre.sh`, `run-add-hicnormvector-to-mcool.sh`, `run-pairsqc-single.sh`). Alignment runs the same `bwa mem -SP5M` command directly instead of `run-bwa-mem.sh`, which writes fixed-name files into a shared directory; BWA index archives (`.tar.gz`) are therefore not supported.
 2. **Micro-C & High-Resolution Support**:
    - Configurable protocol modes (`micro_c`, `dnase_hic`, `in_situ_hic`).
    - Restriction-fragment-free contact extraction and ICE matrix balancing for Micro-C.
@@ -36,7 +36,7 @@ A production-ready **Snakemake 9** workflow reproducing the official **4D Nucleo
                      |
          +-----------+-----------+
          |                       |
-   [run-fastqc.sh]        [run-bwa-mem.sh] (-SP5M)
+   [run-fastqc.sh]        [bwa mem -SP5M]
          |                       |
       FastQC Report             BAM
                                  |

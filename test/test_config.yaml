@@ -12,7 +12,8 @@ save_bam: false
 reference:
   assembly: "hg19"
   fasta: "test/reference/chr21_subset.fasta"
-  bwa_index_tgz: "test/reference/bwa_index.tar.gz"
+  # Empty: build the BWA index from the fasta into <outdir>/reference/bwa_index
+  bwa_index: ""
   chrom_sizes: "test/reference/hg19.chrom.sizes"
 
 matrix:

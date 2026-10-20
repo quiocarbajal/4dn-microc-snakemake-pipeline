@@ -1,6 +1,9 @@
 # =============================================================================
 # 02_alignment.smk: 4DN BWA-MEM Alignment (-SP5M)
-# Uses official 4DN v43 run-bwa-mem.sh inside official container
+# Runs bwa mem -SP5M directly inside the official 4DN v43 container. The 4DN
+# run-bwa-mem.sh wrapper (used for .tar.gz indexes) is not used: it unpacks the
+# index and writes fixed-name fastq1/fastq2 copies into the shared output
+# directory, so concurrent samples could read each other's reads.
 # =============================================================================
 
 rule bwa_mem:
@@ -13,8 +16,7 @@ rule bwa_mem:
     log:
         f"{OUTDIR}/logs/bwa_mem/{{sample}}_{{run}}.log"
     params:
-        outdir = lambda wildcards, output: os.path.dirname(output.bam),
-        prefix = "{sample}_{run}"
+        outdir = lambda wildcards, output: os.path.dirname(output.bam)
     threads:
         8
     container:
@@ -22,28 +24,17 @@ rule bwa_mem:
     shell:
         """
         mkdir -p {params.outdir} $(dirname {log})
-        
-        # Check if bwa_index is a tar.gz / tgz archive (standard 4DN wrapper format)
-        if [[ -f "{input.bwa_index}" && ( "{input.bwa_index}" == *.tar.gz || "{input.bwa_index}" == *.tgz ) ]]; then
-            /usr/local/bin/run-bwa-mem.sh \
-                {input.fastq1} \
-                {input.fastq2} \
-                {input.bwa_index} \
-                {params.outdir} \
-                {params.prefix} \
-                {threads} > {log} 2>&1
-        else
-            # Pre-indexed directory or index prefix
-            if [[ -d "{input.bwa_index}" ]]; then
-                idx_prefix=$(ls -1 {input.bwa_index}/*.bwt 2>/dev/null | head -1 | sed 's/\.bwt//g')
-                if [[ -z "$idx_prefix" ]]; then
-                    idx_prefix="{input.bwa_index}"
-                fi
-            else
+
+        # Pre-indexed directory or index prefix (.tar.gz archives are rejected in get_bwa_index)
+        if [[ -d "{input.bwa_index}" ]]; then
+            idx_prefix=$(ls -1 {input.bwa_index}/*.bwt 2>/dev/null | head -1 | sed 's/[.]bwt//g')
+            if [[ -z "$idx_prefix" ]]; then
                 idx_prefix="{input.bwa_index}"
             fi
-            
-            # Execute 4DN standard bwa mem mapping with -SP5M
-            bwa mem -t {threads} -SP5M "$idx_prefix" {input.fastq1} {input.fastq2} 2> {log} | samtools view -Shb - > {output.bam} 2>> {log}
+        else
+            idx_prefix="{input.bwa_index}"
         fi
+
+        # Execute 4DN standard bwa mem mapping with -SP5M
+        bwa mem -t {threads} -SP5M "$idx_prefix" {input.fastq1} {input.fastq2} 2> {log} | samtools view -Shb - > {output.bam} 2>> {log}
         """

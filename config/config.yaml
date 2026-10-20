@@ -34,7 +34,8 @@ reference:
   # Path to reference FASTA file
   fasta: ""
 
-  # Path to BWA index (directory, prefix, or .tar.gz archive)
+  # Path to BWA index (directory or prefix; .tar.gz archives are not supported, unpack them first).
+  # If left empty and fasta is provided, the pipeline builds an index in <outdir>/reference/bwa_index.
   bwa_index: "/archive/cbds/idx/ensembl/Mus_musculus/GRCm39/sequence_only/bwa/0.7.18"
 
   # Path to two-column chromosome sizes file (<chrom_name>\t<length>)
