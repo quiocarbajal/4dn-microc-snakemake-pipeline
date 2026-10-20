@@ -79,6 +79,9 @@ rule pairsqc:
         CONTAINER_4DN
     shell:
         """
+        # Snakemake sets TMPDIR to a relative path, which crashes R's PDF device in plot.r (exit 139)
+        mkdir -p "${{TMPDIR:-/tmp}}" && export TMPDIR="$(cd "${{TMPDIR:-/tmp}}" && pwd)"
+
         mkdir -p {params.outdir} $(dirname {log})
         /usr/local/bin/run-pairsqc-single.sh \
             {input.pairs} \
@@ -115,8 +118,11 @@ rule pairsqc_merge:
         CONTAINER_4DN
     shell:
         """
+        # Snakemake sets TMPDIR to a relative path, which crashes R's PDF device in plot.r (exit 139)
+        mkdir -p "${{TMPDIR:-/tmp}}" && export TMPDIR="$(cd "${{TMPDIR:-/tmp}}" && pwd)"
+
         mkdir -p {params.outdir} $(dirname {log})
-        
+
         # Working paths
         outreportdir="{params.outdir}/{params.outprefix}_report"
         tmp_unzip="{params.outdir}/tmp_unzip_{wildcards.condition}"
