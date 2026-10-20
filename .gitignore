@@ -5,6 +5,12 @@
 # Local assistant configuration
 AGENTS.md
 
+# Local notes and dataset-specific scripts (not part of the pipeline)
+HANDOVER_*.md
+scripts/Normalize_using_raichu.sh
+scripts/diagnose_contact_discrepancy.py
+scripts/diagnose_contact_discrepancy.sh
+
 # Operating System & Editor Metadata
 .DS_Store
 .DS_Store?

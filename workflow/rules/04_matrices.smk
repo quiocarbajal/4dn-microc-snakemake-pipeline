@@ -274,7 +274,7 @@ rule raichu_normalization:
     params:
         resolutions = config.get("matrix", {}).get("raichu_resolutions", [5000, 10000]),
         venv = config.get("matrix", {}).get("raichu_venv", "/hpc-prj/pezza/Agustin/environments/raichu")
-    # Same as the standalone scripts/Normalize_using_raichu.sh jobs: raichu -p 2
+    # Matches the lab's standalone raichu jobs: raichu -p 2
     # (memory: 5 GB via set-resources in the Slurm profile)
     threads:
         2
@@ -303,7 +303,7 @@ rule raichu_normalization_merged:
     params:
         resolutions = config.get("matrix", {}).get("raichu_resolutions", [5000, 10000]),
         venv = config.get("matrix", {}).get("raichu_venv", "/hpc-prj/pezza/Agustin/environments/raichu")
-    # Same as the standalone scripts/Normalize_using_raichu.sh jobs: raichu -p 2
+    # Matches the lab's standalone raichu jobs: raichu -p 2
     # (memory: 5 GB via set-resources in the Slurm profile)
     threads:
         2
