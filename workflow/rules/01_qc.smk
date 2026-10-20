@@ -87,6 +87,12 @@ rule pairsqc:
             {params.enzyme} \
             {params.outdir} \
             {params.max_dist} > {log} 2>&1
+
+        # run-pairsqc-single.sh never checks exit codes, so scan the log for failures
+        if grep -qE "Traceback|Execution halted" {log}; then
+            echo "pairsqc failed for {wildcards.sample}, see {log}" >&2
+            exit 1
+        fi
         """
 
 # -----------------------------------------------------------------------------
@@ -132,7 +138,13 @@ rule pairsqc_merge:
         
         # Run 4DN R report generation
         Rscript /usr/local/bin/pairsqc/plot.r {params.enzyme} "$outreportdir" > {log} 2>&1
-        
+
+        # Fail on R or Python errors in the log, even if the exit code was 0
+        if grep -qE "Traceback|Execution halted" {log}; then
+            echo "pairsqc_merge failed for {wildcards.condition}, see {log}" >&2
+            exit 1
+        fi
+
         # Package into final zip deliverable
         (cd {params.outdir} && zip -r -q "{params.outprefix}_report.zip" "{params.outprefix}_report")
         if [ "{params.outdir}/{params.outprefix}_report.zip" != "{output.report_zip}" ]; then

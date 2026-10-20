@@ -89,7 +89,9 @@ qc:
   run_pairsqc: true
   # Enzyme argument for pairsqc (4 for 4-cutter, 6 for 6-cutter, "4" for Micro-C standard)
   pairsqc_enzyme: "4"
-  pairsqc_max_distance: 8.4
+  # Maximum log10 distance for pairsqc: 8.2 for mouse, 8.4 for human.
+  # 10^value must not exceed the longest chromosome, or pairsqc.py fails with ZeroDivisionError.
+  pairsqc_max_distance: 8.2
 
 # -----------------------------------------------------------------------------
 # 5. Downstream High-Resolution Analysis (Optional Layer: cooltools)
