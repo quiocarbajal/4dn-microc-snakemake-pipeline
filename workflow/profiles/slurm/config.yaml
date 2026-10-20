@@ -16,7 +16,7 @@ apptainer-prefix: "/hpc-prj/pezza/containers/microc_4DN_pipeline_apptainer_cache
 use-envmodules: true
 
 # Apptainer execution arguments (bind shared lab filesystem and read-only reference archive)
-apptainer-args: "--bind /s/pezzar-lab,/hpc-prj/pezza,/Volumes/shared-refs:/Volumes/shared-refs:ro,/archive/cbds:/archive/cbds:ro"
+apptainer-args: "--bind /s/pezzar-lab,/hpc-prj/pezza,/Volumes/shared-refs:/Volumes/shared-refs:ro,/archive/cbds:/archive/cbds:ro,/archive/pezza:/archive/pezza:ro"
 
 # General execution settings
 printshellcmds: true
