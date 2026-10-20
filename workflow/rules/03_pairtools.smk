@@ -167,6 +167,10 @@ rule merge_bio_reps:
         outprefix = lambda wildcards, output: output.merged_ff_pairs.replace('.pairs.gz', '')
     threads:
         2
+    # run-merge-pairs.sh creates fixed-name FIFOs pp.1, pp.2, ... in the working
+    # directory; a per-job shadow directory stops concurrent conditions sharing them
+    shadow:
+        "minimal"
     container:
         CONTAINER_4DN
     shell:

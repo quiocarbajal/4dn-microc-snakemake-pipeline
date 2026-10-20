@@ -21,6 +21,10 @@ rule cooler_cload:
         max_split = 2
     threads:
         4
+    # run-cooler.sh copies the chrom sizes to a fixed-name ./tmpchrsize; a per-job
+    # shadow directory stops a concurrent job reading it while it is being rewritten
+    shadow:
+        "minimal"
     container:
         CONTAINER_4DN
     shell:
@@ -173,6 +177,10 @@ rule cooler_cload_merged:
         max_split = 2
     threads:
         4
+    # run-cooler.sh copies the chrom sizes to a fixed-name ./tmpchrsize; a per-job
+    # shadow directory stops a concurrent job reading it while it is being rewritten
+    shadow:
+        "minimal"
     container:
         CONTAINER_4DN
     shell:
