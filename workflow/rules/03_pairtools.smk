@@ -17,7 +17,9 @@ rule pairsam_parse_sort:
     params:
         outdir = lambda wildcards, output: os.path.dirname(output.pairsam),
         prefix = "{sample}_{run}",
-        compress_program = "gzip"
+        # Compresses only pairtools sort's temporary chunks (never the output); lz4c is the
+        # wrapper's own default and much faster than gzip, at the cost of larger temp files
+        compress_program = "lz4c"
     threads:
         16
     container:
@@ -72,8 +74,10 @@ rule pairsam_markasdup:
         f"{OUTDIR}/logs/pairtools/markasdup_{{sample}}.log"
     params:
         outprefix = lambda wildcards, output: output.marked_pairsam.replace('.marked.sam.pairs.gz', '')
+    # The wrapper passes no thread flags, but pairtools starts pbgzip helpers by default
+    # (3 decompressing, 8 compressing); 12 cores lets them run side by side
     threads:
-        2
+        12
     container:
         CONTAINER_4DN
     shell:
@@ -100,8 +104,10 @@ rule pairsam_filter:
         f"{OUTDIR}/logs/pairtools/filter_{{sample}}.log"
     params:
         outprefix = lambda wildcards, output: output.dedup_pairs.replace('.dedup.pairs.gz', '')
+    # The wrapper passes no thread flags, but each pairtools step starts pbgzip helpers by
+    # default (3 decompressing, 8 compressing per output); 12 cores lets them run side by side
     threads:
-        2
+        12
     # run-pairsam-filter.sh writes fixed-name temp.gz / temp1.gz into the working
     # directory; a per-job shadow directory stops concurrent samples overwriting them
     shadow:

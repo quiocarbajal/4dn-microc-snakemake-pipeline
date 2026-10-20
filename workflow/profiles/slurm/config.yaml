@@ -44,12 +44,18 @@ set-resources:
   # ---------------------------------------------------------------------------
   # A. Rules with Multi-Core Parallelism (threads != 2)
   # ---------------------------------------------------------------------------
+  # runtime is in minutes; 5760 = 4 days, the maximum of the default serial partition, for the
+  # long alignment and pairs-processing rules (bwa_mem, pairsam_parse_sort,
+  # pairsam_merge_seq_reps, pairsam_markasdup, pairsam_filter). Longer jobs need an admin
+  # to extend the running job's time limit.
   pairsam_parse_sort:
     threads: 16
     mem_mb: 65536
+    runtime: 5760
   bwa_mem:
     threads: 8
     mem_mb: 32768
+    runtime: 5760
   cooler_zoomify:
     threads: 8
     mem_mb: 49152
@@ -59,6 +65,7 @@ set-resources:
   pairsam_merge_seq_reps:
     threads: 8
     mem_mb: 16384
+    runtime: 5760
   cooler_cload:
     threads: 4
     mem_mb: 32768
@@ -78,8 +85,10 @@ set-resources:
     mem_mb: 65536
   pairsam_markasdup:
     mem_mb: 32768
+    runtime: 5760
   pairsam_filter:
     mem_mb: 32768
+    runtime: 5760
   merge_bio_reps:
     mem_mb: 16384
   add_hic_norm_to_mcool:

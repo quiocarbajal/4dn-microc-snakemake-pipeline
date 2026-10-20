@@ -17,9 +17,20 @@ rule record_provenance:
         import json
         import datetime
         import os
+        import subprocess
 
         fasta_path = config.get("reference", {}).get("fasta", "")
         fasta_size = os.path.getsize(fasta_path) if fasta_path and os.path.exists(fasta_path) else "N/A"
+
+        # Exact pipeline code used for this run: commit, nearest tag, and any files in the
+        # run folder that differ from that commit (e.g. a dataset-specific config/samples.tsv)
+        def run_git(git_arguments):
+            try:
+                return subprocess.run(["git", "-C", workflow.basedir] + git_arguments, capture_output=True, text=True, check=True).stdout.rstrip("\n")
+            except Exception:
+                return "unavailable"
+
+        git_status_lines = run_git(["status", "--porcelain", "--untracked-files=no"])
 
         meta = {
             "pipeline": {
@@ -28,6 +39,12 @@ rule record_provenance:
                 "reference_repo": "https://github.com/4dn-dcic/docker-4dn-hic",
                 "target_release": "v43",
                 "execution_time_utc": datetime.datetime.utcnow().isoformat()
+            },
+            "pipeline_code": {
+                "git_commit": run_git(["rev-parse", "HEAD"]),
+                "git_describe": run_git(["describe", "--tags", "--always", "--dirty"]),
+                "git_remote_origin": run_git(["remote", "get-url", "origin"]),
+                "files_differing_from_commit": git_status_lines.splitlines() if git_status_lines not in ("", "unavailable") else ([] if git_status_lines == "" else "unavailable")
             },
             "containers": {
                 "4dn_hic": CONTAINER_4DN,
