@@ -304,7 +304,7 @@ rule raichu_normalization_merged:
         resolutions = config.get("matrix", {}).get("raichu_resolutions", [5000, 10000]),
         venv = config.get("matrix", {}).get("raichu_venv", "/hpc-prj/pezza/Agustin/environments/raichu")
     # Matches the lab's standalone raichu jobs: raichu -p 2
-    # (memory: 5 GB via set-resources in the Slurm profile)
+    # (memory: 32 GB via set-resources in the Slurm profile; 5 GB ran out on a merged condition)
     threads:
         2
     shell:

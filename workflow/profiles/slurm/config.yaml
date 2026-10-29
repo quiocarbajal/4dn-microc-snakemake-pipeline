@@ -103,8 +103,10 @@ set-resources:
     mem_mb: 8192
   raichu_normalization:
     mem_mb: 5120
+  # Merged conditions need more: the merged PA_B6xCAST mcool (three deep replicates) was
+  # killed for exceeding 5 GB while loading the 5 kb matrix
   raichu_normalization_merged:
-    mem_mb: 5120
+    mem_mb: 32768
 
   # (Rules matching default threads: 2 and mem_mb: 4096 like fastqc_r1, fastqc_r2,
   # and addfrag_or_pass are completely covered by default-resources above)
